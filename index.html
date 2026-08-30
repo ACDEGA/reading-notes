@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>讀書筆記</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<style>
+:root{
+  --bg-top:#070c1c;
+  --bg-mid:#0b1430;
+  --bg-bot:#000000;
+  --panel:rgba(255,255,255,.035);
+  --panel-2:rgba(255,255,255,.055);
+  --line:rgba(255,255,255,.10);
+  --line-2:rgba(255,255,255,.18);
+  --txt:#e8ecf6;
+  --txt-dim:#93a0bd;
+  --txt-faint:#5f6c8a;
+  --accent:#5b8dee;
+  --accent-2:#8fb4ff;
+  --gold:#d9b26a;
+  --danger:#e2686d;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{background:#04070f}
+body{
+  min-height:100vh;
+  color:var(--txt);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.7;
+  background:transparent;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(1200px 700px at 12% -10%, #16255c 0%, transparent 60%),
+    radial-gradient(900px 600px at 92% 8%, #0f2a52 0%, transparent 55%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 32%, #04070f 70%, var(--bg-bot) 100%);
+}
+a{color:var(--accent-2);text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 90px}
+header.top{
+  position:sticky;top:0;z-index:40;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:linear-gradient(180deg,rgba(6,10,24,.92),rgba(6,10,24,.62));
+  border-bottom:1px solid var(--line);
+}
+.top-in{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;font-size:17px;letter-spacing:.14em;font-weight:600;cursor:pointer}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px var(--gold)}
+.spacer{flex:1}
+
+.icon-btn{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:7px 12px;font-size:13px;color:var(--txt-dim);transition:.18s;
+}
+.icon-btn:hover{background:var(--panel-2);color:var(--txt);border-color:var(--line-2)}
+.btn{
+  background:linear-gradient(180deg,#3f6fd0,#2f57ad);border:1px solid #4d7fe0;
+  border-radius:10px;padding:10px 18px;font-weight:600;font-size:14px;color:#fff;
+  transition:.18s;box-shadow:0 6px 18px rgba(47,87,173,.32);
+}
+.btn:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+.btn.ghost{background:var(--panel);border-color:var(--line);box-shadow:none;color:var(--txt-dim);font-weight:500}
+.btn.ghost:hover{background:var(--panel-2);color:var(--txt)}
+.btn.danger{background:none;border-color:rgba(226,104,109,.35);color:var(--danger);box-shadow:none}
+.btn.danger:hover{background:rgba(226,104,109,.1)}
+
+/* status pill */
+#status{font-size:12px;color:var(--txt-faint);white-space:nowrap;transition:.2s}
+#status.ok{color:#6fd39a}
+#status.err{color:var(--danger)}
+#status.busy{color:var(--gold)}
+
+/* ---------- shelf ---------- */
+.page-head{padding:38px 0 22px}
+.page-head h1{margin:0 0 6px;font-size:30px;font-weight:600;letter-spacing:.04em}
+.page-head p{margin:0;color:var(--txt-dim);font-size:14px}
+
+.shelf{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(158px,1fr))}
+.book{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;cursor:pointer;transition:.2s;display:flex;flex-direction:column;
+}
+.book:hover{transform:translateY(-4px);border-color:var(--line-2);background:var(--panel-2);box-shadow:0 14px 34px rgba(0,0,0,.45)}
+.cover{aspect-ratio:3/4.3;background:linear-gradient(160deg,#1b2a55,#0a1128);position:relative;overflow:hidden}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;opacity:.35}
+.book-meta{padding:11px 12px 13px}
+.book-meta .t{font-size:14px;font-weight:600;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book-meta .a{font-size:12px;color:var(--txt-faint);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-meta .n{font-size:11px;color:var(--accent);margin-top:7px;letter-spacing:.06em}
+.book.add{align-items:center;justify-content:center;border-style:dashed;min-height:210px;color:var(--txt-faint)}
+.book.add:hover{color:var(--accent-2)}
+.book.add .plus{font-size:30px;line-height:1}
+.book.add span{font-size:13px;margin-top:8px}
+
+.empty{padding:70px 20px;text-align:center;color:var(--txt-faint)}
+
+/* ---------- book page ---------- */
+.book-head{display:flex;gap:24px;padding:34px 0 26px;align-items:flex-start}
+.book-head .bc{width:110px;flex:0 0 110px;aspect-ratio:3/4.3;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(160deg,#1b2a55,#0a1128);position:relative}
+.book-head .bc img{width:100%;height:100%;object-fit:cover}
+.book-head .bc .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;opacity:.35}
+.book-head h1{margin:2px 0 6px;font-size:26px;font-weight:600;line-height:1.35}
+.book-head .sub{color:var(--txt-dim);font-size:14px}
+.book-head .tools{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+
+.sec-label{display:flex;align-items:center;gap:12px;margin:26px 0 16px;color:var(--txt-faint);font-size:12px;letter-spacing:.18em}
+.sec-label:after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* note entry */
+.entry{
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+  border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:18px;
+}
+.entry .loc{
+  width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);
+  padding:4px 2px 8px;font-size:13px;color:var(--txt-dim);outline:none;margin-bottom:14px;
+}
+.entry .loc:focus{border-color:var(--accent)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.col label{display:block;font-size:11px;letter-spacing:.16em;color:var(--txt-faint);margin-bottom:7px}
+.col label b{color:var(--accent-2);font-weight:600}
+.col.thought label b{color:var(--gold)}
+.col textarea{
+  width:100%;min-height:150px;resize:vertical;background:rgba(0,0,0,.28);
+  border:1px solid var(--line);border-radius:10px;padding:12px 13px;line-height:1.8;outline:none;transition:.18s;
+}
+.col textarea:focus{border-color:var(--accent);background:rgba(0,0,0,.42);box-shadow:0 0 0 3px rgba(91,141,238,.12)}
+.col.thought textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,178,106,.12)}
+.entry-foot{display:flex;align-items:center;gap:10px;margin-top:14px}
+.entry-foot .hint{font-size:12px;color:var(--txt-faint);flex:1}
+
+/* saved notes */
+.note{
+  border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;
+  background:rgba(255,255,255,.022);transition:.18s;
+}
+.note:hover{border-color:var(--line-2)}
+.note-top{display:flex;align-items:center;gap:10px;padding:10px 15px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.2)}
+.note-top .idx{font-size:12px;color:var(--accent);letter-spacing:.08em}
+.note-top .loc{font-size:12px;color:var(--txt-dim)}
+.note-top .date{font-size:11px;color:var(--txt-faint);margin-left:auto}
+.note-top .mini{background:none;border:none;color:var(--txt-faint);font-size:12px;padding:2px 6px;border-radius:6px}
+.note-top .mini:hover{color:var(--txt);background:var(--panel-2)}
+.note-body{display:grid;grid-template-columns:1fr 1fr}
+.note-body .half{padding:14px 16px;white-space:pre-wrap;word-break:break-word;font-size:14px}
+.note-body .half:first-child{border-right:1px solid var(--line)}
+.note-body .half .tag{display:block;font-size:10px;letter-spacing:.16em;color:var(--txt-faint);margin-bottom:7px}
+.note-body .half.thought{background:rgba(217,178,106,.035)}
+.note-body .half.thought .tag{color:rgba(217,178,106,.7)}
+.note-body .half.empty-half{color:var(--txt-faint);font-style:italic}
+
+/* ---------- modal ---------- */
+.mask{position:fixed;inset:0;background:rgba(2,4,10,.72);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{
+  width:100%;max-width:440px;background:linear-gradient(180deg,#0d1630,#070b18);
+  border:1px solid var(--line-2);border-radius:16px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.6);
+  max-height:90vh;overflow:auto;
+}
+.modal h2{margin:0 0 4px;font-size:19px;font-weight:600}
+.modal .desc{color:var(--txt-dim);font-size:13px;margin:0 0 18px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--txt-dim);margin-bottom:6px}
+.field input[type=text],.field input[type=password]{
+  width:100%;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:9px;padding:10px 12px;outline:none;
+}
+.field input:focus{border-color:var(--accent)}
+.field .tip{font-size:11px;color:var(--txt-faint);margin-top:5px;line-height:1.6}
+.drop{
+  border:1px dashed var(--line-2);border-radius:10px;padding:16px;text-align:center;color:var(--txt-faint);
+  font-size:13px;cursor:pointer;transition:.18s;
+}
+.drop:hover{border-color:var(--accent);color:var(--accent-2)}
+.drop img{max-height:130px;border-radius:8px;display:block;margin:0 auto}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:#101a36;border:1px solid var(--line-2);border-radius:10px;padding:11px 18px;font-size:13px;
+  opacity:0;pointer-events:none;transition:.25s;z-index:200;box-shadow:0 12px 30px rgba(0,0,0,.5)
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:680px){
+  .cols{grid-template-columns:1fr}
+  .note-body{grid-template-columns:1fr}
+  .note-body .half:first-child{border-right:none;border-bottom:1px solid var(--line)}
+  .book-head{gap:16px}
+  .book-head .bc{width:84px;flex:0 0 84px}
+  .book-head h1{font-size:21px}
+  .page-head h1{font-size:24px}
+  .shelf{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:14px}
+  .wrap{padding:0 14px 80px}
+  .top-in{padding:12px 14px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand" onclick="location.hash='#/'"><span class="dot"></span> 讀書筆記</div>
+    <div class="spacer"></div>
+    <span id="status">未設定</span>
+    <button class="icon-btn" onclick="openSettings()">設定</button>
+  </div>
+</header>
+
+<div class="wrap" id="view"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   設定 / 儲存層：GitHub Contents API
+   ========================================================= */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v===null?d:v; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+const DATA_PATH = 'data/library.json';
+let cfg = {
+  owner: LS.get('rn_owner',''),
+  repo:  LS.get('rn_repo',''),
+  branch:LS.get('rn_branch','main'),
+  token: LS.get('rn_token','')
+};
+let lib = { version:1, books:[] };
+let sha = null;              // library.json 的 sha
+let coverCache = {};         // 剛上傳的封面即時預覽
+let dirtyTimer = null;
+
+function saveCfg(){
+  LS.set('rn_owner',cfg.owner); LS.set('rn_repo',cfg.repo);
+  LS.set('rn_branch',cfg.branch); LS.set('rn_token',cfg.token);
+}
+function configured(){ return cfg.owner && cfg.repo; }
+function canWrite(){ return configured() && cfg.token; }
+
+function setStatus(text, cls){
+  const el = document.getElementById('status');
+  el.textContent = text; el.className = cls || '';
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---- base64 (UTF-8 safe) ---- */
+function b64encode(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function b64decode(b64){
+  const bin = atob(b64.replace(/\s/g,''));
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+/* ---- GitHub API ---- */
+async function gh(path, opts){
+  opts = opts || {};
+  const headers = Object.assign({'Accept':'application/vnd.github+json'}, opts.headers||{});
+  if(cfg.token) headers['Authorization'] = 'Bearer ' + cfg.token;
+  const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/${path}`, {...opts, headers});
+  return res;
+}
+
+async function loadLibrary(){
+  if(!configured()){ setStatus('未設定','err'); render(); return; }
+  setStatus('讀取中…','busy');
+  try{
+    const res = await gh(`contents/${DATA_PATH}?ref=${encodeURIComponent(cfg.branch)}&t=${Date.now()}`);
+    if(res.status === 404){
+      lib = {version:1, books:[]}; sha = null;
+      setStatus(cfg.token ? '已連線（尚無資料）' : '唯讀', cfg.token?'ok':'');
+    } else if(res.ok){
+      const j = await res.json();
+      sha = j.sha;
+      const txt = b64decode(j.content||'');
+      const parsed = JSON.parse(txt || '{}');
+      lib = { version:1, books: Array.isArray(parsed.books) ? parsed.books : [] };
+      setStatus(cfg.token ? '已連線 GitHub' : '唯讀模式', cfg.token?'ok':'');
+    } else {
+      const msg = res.status===401||res.status===403 ? 'Token 無效或權限不足' : ('讀取失敗 '+res.status);
+      setStatus(msg,'err');
+    }
+  }catch(e){
+    setStatus('連線失敗','err');
+  }
+  render();
+}
+
+async function pushLibrary(message){
+  if(!canWrite()){ toast('請先在「設定」填入 GitHub Token'); return false; }
+  setStatus('儲存中…','busy');
+  const body = {
+    message: message || '更新讀書筆記',
+    content: b64encode(JSON.stringify(lib, null, 2)),
+    branch: cfg.branch
+  };
+  if(sha) body.sha = sha;
+  let res = await gh(`contents/${DATA_PATH}`, {method:'PUT', body: JSON.stringify(body)});
+
+  if(res.status === 409 || res.status === 422){    // sha 過期，重抓再存
+    const cur = await gh(`contents/${DATA_PATH}?ref=${encodeURIComponent(cfg.branch)}&t=${Date.now()}`);
+    if(cur.ok){ const j = await cur.json(); body.sha = j.sha; }
+    res = await gh(`contents/${DATA_PATH}`, {method:'PUT', body: JSON.stringify(body)});
+  }
+  if(res.ok){
+    const j = await res.json();
+    sha = j.content && j.content.sha ? j.content.sha : sha;
+    setStatus('已存到 GitHub','ok');
+    return true;
+  }
+  const err = await res.json().catch(()=>({}));
+  setStatus('儲存失敗','err');
+  toast('儲存失敗：' + (err.message || res.status));
+  return false;
+}
+
+async function uploadCover(bookId, dataUrl){
+  const base64 = dataUrl.split(',')[1];
+  const path = `covers/${bookId}.jpg`;
+  let shaOld = null;
+  const head = await gh(`contents/${path}?ref=${encodeURIComponent(cfg.branch)}`);
+  if(head.ok){ const j = await head.json(); shaOld = j.sha; }
+  const body = {message:`封面 ${bookId}`, content: base64, branch: cfg.branch};
+  if(shaOld) body.sha = shaOld;
+  const res = await gh(`contents/${path}`, {method:'PUT', body: JSON.stringify(body)});
+  if(!res.ok) throw new Error('封面上傳失敗');
+  return path;
+}
+
+function coverUrl(book){
+  if(coverCache[book.id]) return coverCache[book.id];
+  if(!book.cover) return null;
+  if(/^https?:/.test(book.cover)) return book.cover;
+  return `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}/${book.cover}?v=${book.coverV||1}`;
+}
+
+/* =========================================================
+   小工具
+   ========================================================= */
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const esc = s => (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = iso => { const d = new Date(iso); return isNaN(d)?'':`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; };
+
+function resizeImage(file, maxW){
+  return new Promise((resolve,reject)=>{
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width);
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width*scale); c.height = Math.round(img.height*scale);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        resolve(c.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = reject; img.src = fr.result;
+    };
+    fr.onerror = reject; fr.readAsDataURL(file);
+  });
+}
+
+/* =========================================================
+   畫面
+   ========================================================= */
+function render(){
+  const h = location.hash || '#/';
+  const m = h.match(/^#\/book\/(.+)$/);
+  if(m){ renderBook(decodeURIComponent(m[1])); }
+  else { renderShelf(); }
+}
+
+function renderShelf(){
+  const v = document.getElementById('view');
+  const books = lib.books.slice().sort((a,b)=> (b.updated||b.created||'').localeCompare(a.updated||a.created||''));
+  const totalNotes = lib.books.reduce((s,b)=>s+(b.notes?b.notes.length:0),0);
+
+  let cards = books.map(b=>{
+    const url = coverUrl(b);
+    return `<div class="book" onclick="location.hash='#/book/${encodeURIComponent(b.id)}'">
+      <div class="cover">${url?`<img src="${esc(url)}" alt="" onerror="this.style.display='none'">`:''}<div class="ph">📖</div></div>
+      <div class="book-meta">
+        <div class="t">${esc(b.title)}</div>
+        ${b.author?`<div class="a">${esc(b.author)}</div>`:''}
+        <div class="n">${(b.notes||[]).length} 則筆記</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const addCard = `<div class="book add" onclick="openBookModal()"><div class="plus">＋</div><span>新增書籍</span></div>`;
+
+  v.innerHTML = `
+    <div class="page-head">
+      <h1>我的書架</h1>
+      <p>${lib.books.length} 本書 · 共 ${totalNotes} 則筆記${configured()?'':' — 請先到右上角「設定」連結你的 GitHub'}</p>
+    </div>
+    <div class="shelf">${cards}${addCard}</div>
+    ${books.length===0?'<div class="empty">還沒有書。點「＋ 新增書籍」開始第一本吧。</div>':''}
+  `;
+}
+
+function renderBook(id){
+  const v = document.getElementById('view');
+  const b = lib.books.find(x=>x.id===id);
+  if(!b){ v.innerHTML = `<div class="empty">找不到這本書。<br><br><button class="btn ghost" onclick="location.hash='#/'">回書架</button></div>`; return; }
+  const notes = b.notes || [];
+  const url = coverUrl(b);
+
+  const noteHtml = notes.map((n,i)=>`
+    <div class="note">
+      <div class="note-top">
+        <span class="idx">#${i+1}</span>
+        ${n.loc?`<span class="loc">${esc(n.loc)}</span>`:''}
+        <span class="date">${fmtDate(n.created)}</span>
+        <button class="mini" onclick="editNote('${b.id}','${n.id}')">編輯</button>
+        <button class="mini" onclick="delNote('${b.id}','${n.id}')">刪除</button>
+      </div>
+      <div class="note-body">
+        <div class="half${n.summary?'':' empty-half'}"><span class="tag">摘要</span>${n.summary?esc(n.summary):'（無）'}</div>
+        <div class="half thought${n.thought?'':' empty-half'}"><span class="tag">心得</span>${n.thought?esc(n.thought):'（無）'}</div>
+      </div>
+    </div>`).join('');
+
+  v.innerHTML = `
+    <div class="book-head">
+      <div class="bc">${url?`<img src="${esc(url)}" alt="" onerror="this.style.display='none'">`:''}<div class="ph">📖</div></div>
+      <div style="flex:1;min-width:0">
+        <h1>${esc(b.title)}</h1>
+        <div class="sub">${b.author?esc(b.author)+' · ':''}${notes.length} 則筆記</div>
+        <div class="tools">
+          <button class="icon-btn" onclick="location.hash='#/'">← 書架</button>
+          <button class="icon-btn" onclick="openBookModal('${b.id}')">編輯書籍</button>
+          <button class="icon-btn" onclick="delBook('${b.id}')">刪除這本書</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-label">寫下這一段</div>
+    <div class="entry">
+      <input class="loc" id="in-loc" placeholder="章節 / 頁數（可留空）">
+      <div class="cols">
+        <div class="col">
+          <label><b>摘要</b>　這一段書上說了什麼</label>
+          <textarea id="in-sum" placeholder="把這一段的重點整理下來…"></textarea>
+        </div>
+        <div class="col thought">
+          <label><b>心得</b>　你當下的想法</label>
+          <textarea id="in-tho" placeholder="讀完的感覺、聯想、疑問…"></textarea>
+        </div>
+      </div>
+      <div class="entry-foot">
+        <span class="hint">存好後欄位會清空，可以接著讀、接著寫下一段。</span>
+        <button class="btn" id="save-btn" onclick="saveNote('${b.id}')">儲存這一段</button>
+      </div>
+    </div>
+
+    <div class="sec-label">已存下的段落（${notes.length}）</div>
+    ${notes.length? noteHtml : '<div class="empty">還沒有筆記，上面寫下第一段吧。</div>'}
+  `;
+
+  // 草稿自動保留
+  const dk = 'rn_draft_'+b.id;
+  const d = JSON.parse(LS.get(dk,'null') || 'null');
+  if(d){ el('in-loc').value=d.loc||''; el('in-sum').value=d.summary||''; el('in-tho').value=d.thought||''; }
+  ['in-loc','in-sum','in-tho'].forEach(idd=>{
+    el(idd).addEventListener('input', ()=>{
+      clearTimeout(dirtyTimer);
+      dirtyTimer = setTimeout(()=>LS.set(dk, JSON.stringify({loc:el('in-loc').value, summary:el('in-sum').value, thought:el('in-tho').value})), 400);
+    });
+  });
+  // Ctrl/Cmd + Enter 儲存
+  ['in-sum','in-tho'].forEach(idd=>{
+    el(idd).addEventListener('keydown', e=>{
+      if((e.metaKey||e.ctrlKey) && e.key==='Enter'){ e.preventDefault(); saveNote(b.id); }
+    });
+  });
+}
+const el = id => document.getElementById(id);
+
+/* =========================================================
+   動作
+   ========================================================= */
+async function saveNote(bookId){
+  const b = lib.books.find(x=>x.id===bookId); if(!b) return;
+  const loc = el('in-loc').value.trim();
+  const summary = el('in-sum').value.trim();
+  const thought = el('in-tho').value.trim();
+  if(!summary && !thought){ toast('摘要跟心得至少寫一邊'); return; }
+  const btn = el('save-btn'); btn.disabled = true; btn.textContent = '儲存中…';
+
+  b.notes = b.notes || [];
+  const note = { id: uid('n_'), loc, summary, thought, created: new Date().toISOString() };
+  b.notes.push(note);
+  b.updated = note.created;
+
+  const ok = await pushLibrary(`筆記：${b.title}${loc?' ('+loc+')':''}`);
+  btn.disabled = false; btn.textContent = '儲存這一段';
+  if(!ok){ b.notes.pop(); return; }
+  LS.del('rn_draft_'+bookId);
+  render();
+  toast('已儲存 ✓ 繼續下一段');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function delNote(bookId, noteId){
+  if(!confirm('刪除這一段筆記？')) return;
+  const b = lib.books.find(x=>x.id===bookId); if(!b) return;
+  const i = b.notes.findIndex(n=>n.id===noteId); if(i<0) return;
+  const backup = b.notes[i];
+  b.notes.splice(i,1);
+  const ok = await pushLibrary(`刪除筆記：${b.title}`);
+  if(!ok){ b.notes.splice(i,0,backup); return; }
+  render(); toast('已刪除');
+}
+
+function editNote(bookId, noteId){
+  const b = lib.books.find(x=>x.id===bookId); if(!b) return;
+  const n = b.notes.find(x=>x.id===noteId); if(!n) return;
+  showModal(`
+    <h2>編輯筆記</h2>
+    <p class="desc">${esc(b.title)}</p>
+    <div class="field"><label>章節 / 頁數</label><input type="text" id="e-loc" value="${esc(n.loc||'')}"></div>
+    <div class="field"><label>摘要</label><textarea id="e-sum" style="width:100%;min-height:120px;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:9px;padding:10px 12px;outline:none;resize:vertical">${esc(n.summary||'')}</textarea></div>
+    <div class="field"><label>心得</label><textarea id="e-tho" style="width:100%;min-height:120px;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:9px;padding:10px 12px;outline:none;resize:vertical">${esc(n.thought||'')}</textarea></div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeModal()">取消</button>
+      <button class="btn" id="e-save">更新</button>
+    </div>`);
+  el('e-save').onclick = async ()=>{
+    const before = {loc:n.loc, summary:n.summary, thought:n.thought};
+    n.loc = el('e-loc').value.trim();
+    n.summary = el('e-sum').value.trim();
+    n.thought = el('e-tho').value.trim();
+    el('e-save').disabled = true; el('e-save').textContent='更新中…';
+    const ok = await pushLibrary(`編輯筆記：${b.title}`);
+    if(!ok){ Object.assign(n, before); el('e-save').disabled=false; el('e-save').textContent='更新'; return; }
+    closeModal(); render(); toast('已更新');
+  };
+}
+
+/* ---- 書籍 ---- */
+let pendingCover = null;
+function openBookModal(bookId){
+  const b = bookId ? lib.books.find(x=>x.id===bookId) : null;
+  pendingCover = null;
+  const preview = b ? coverUrl(b) : null;
+  showModal(`
+    <h2>${b?'編輯書籍':'新增書籍'}</h2>
+    <p class="desc">${b?'修改書名、作者或換一張封面':'書名跟封面，之後隨時可以改'}</p>
+    <div class="field"><label>書名</label><input type="text" id="b-title" value="${b?esc(b.title):''}" placeholder="例如：被討厭的勇氣"></div>
+    <div class="field"><label>作者（可留空）</label><input type="text" id="b-author" value="${b?esc(b.author||''):''}"></div>
+    <div class="field">
+      <label>封面照片</label>
+      <div class="drop" id="b-drop">${preview?`<img id="b-prev" src="${esc(preview)}">`:'點這裡選一張照片<br><span style="font-size:11px">會自動縮小後存進你的 GitHub</span>'}</div>
+      <input type="file" id="b-file" accept="image/*" style="display:none">
+      <div class="tip">也可以直接拍書封。存檔時才會上傳。</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeModal()">取消</button>
+      <button class="btn" id="b-save">${b?'儲存':'建立'}</button>
+    </div>`);
+
+  el('b-drop').onclick = ()=> el('b-file').click();
+  el('b-file').onchange = async e=>{
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      pendingCover = await resizeImage(f, 640);
+      el('b-drop').innerHTML = `<img id="b-prev" src="${pendingCover}">`;
+    }catch(err){ toast('照片讀取失敗'); }
+  };
+
+  el('b-save').onclick = async ()=>{
+    const title = el('b-title').value.trim();
+    if(!title){ toast('請輸入書名'); return; }
+    if(!canWrite()){ toast('請先在「設定」填入 GitHub Token'); return; }
+    const btn = el('b-save'); btn.disabled = true; btn.textContent='處理中…';
+    const now = new Date().toISOString();
+    let book = b;
+    if(!book){ book = {id: uid('b_'), title:'', author:'', cover:'', notes:[], created: now}; lib.books.push(book); }
+    const before = {title:book.title, author:book.author, cover:book.cover, coverV:book.coverV};
+    book.title = title; book.author = el('b-author').value.trim(); book.updated = now;
+    try{
+      if(pendingCover){
+        setStatus('上傳封面…','busy');
+        book.cover = await uploadCover(book.id, pendingCover);
+        book.coverV = (book.coverV||0) + 1;
+        coverCache[book.id] = pendingCover;
+      }
+    }catch(err){
+      toast('封面上傳失敗，其他資料仍會儲存');
+    }
+    const ok = await pushLibrary(`${b?'編輯':'新增'}書籍：${title}`);
+    btn.disabled = false; btn.textContent = b?'儲存':'建立';
+    if(!ok){
+      if(!b) lib.books.pop(); else Object.assign(book, before);
+      return;
+    }
+    closeModal();
+    if(!b) location.hash = '#/book/'+encodeURIComponent(book.id);
+    render(); toast('已儲存 ✓');
+  };
+}
+
+async function delBook(bookId){
+  const b = lib.books.find(x=>x.id===bookId); if(!b) return;
+  if(!confirm(`刪除《${b.title}》和裡面的 ${(b.notes||[]).length} 則筆記？`)) return;
+  const i = lib.books.indexOf(b);
+  lib.books.splice(i,1);
+  const ok = await pushLibrary(`刪除書籍：${b.title}`);
+  if(!ok){ lib.books.splice(i,0,b); return; }
+  location.hash = '#/'; render(); toast('已刪除');
+}
+
+/* ---- 設定 ---- */
+function openSettings(){
+  showModal(`
+    <h2>設定</h2>
+    <p class="desc">告訴這個網頁要把筆記存到哪個 GitHub repo。</p>
+    <div class="field"><label>GitHub 帳號</label><input type="text" id="s-owner" value="${esc(cfg.owner)}" placeholder="your-username"></div>
+    <div class="field"><label>Repo 名稱</label><input type="text" id="s-repo" value="${esc(cfg.repo)}" placeholder="reading-notes"></div>
+    <div class="field"><label>分支</label><input type="text" id="s-branch" value="${esc(cfg.branch)}" placeholder="main"></div>
+    <div class="field">
+      <label>Personal Access Token</label>
+      <input type="password" id="s-token" value="${esc(cfg.token)}" placeholder="github_pat_...">
+      <div class="tip">只存在這台裝置的瀏覽器，不會上傳。<br>建 token：GitHub → Settings → Developer settings → Personal access tokens → Fine-grained，只勾這個 repo 的 <b>Contents: Read and write</b>。</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="exportJson()">匯出備份</button>
+      <button class="btn" id="s-save">儲存設定</button>
+    </div>`);
+  el('s-save').onclick = ()=>{
+    cfg.owner = el('s-owner').value.trim();
+    cfg.repo = el('s-repo').value.trim();
+    cfg.branch = el('s-branch').value.trim() || 'main';
+    cfg.token = el('s-token').value.trim();
+    saveCfg(); closeModal(); loadLibrary(); toast('設定已儲存');
+  };
+}
+
+function exportJson(){
+  const blob = new Blob([JSON.stringify(lib,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'reading-notes-backup.json';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---- modal helpers ---- */
+function showModal(html){
+  closeModal();
+  const mask = document.createElement('div');
+  mask.className='mask'; mask.id='mask';
+  mask.innerHTML = `<div class="modal">${html}</div>`;
+  mask.onclick = e => { if(e.target===mask) closeModal(); };
+  document.body.appendChild(mask);
+}
+function closeModal(){ const m = el('mask'); if(m) m.remove(); }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ---- start ---- */
+window.addEventListener('hashchange', render);
+render();
+loadLibrary();
+if(!configured()) setTimeout(openSettings, 400);
+</script>
+</body>
+</html>
