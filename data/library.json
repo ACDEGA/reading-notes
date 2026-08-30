@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "books": [
+    {
+      "id": "b_mtfyex0dukm0",
+      "title": "最後一次相遇，我們只談喜悅",
+      "author": "",
+      "cover": "covers/b_mtfyex0dukm0.jpg",
+      "notes": [],
+      "created": "2026-08-30T15:18:13.405Z",
+      "updated": "2026-08-30T15:18:13.405Z",
+      "coverV": 1
+    }
+  ]
+}
